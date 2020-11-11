@@ -48,28 +48,30 @@ namespace ModifyPdf.Controllers
 
                         if (IsPortrait(reader, i))
                         {
+                            contentByte.AddTemplate(importedPage, 0, 0);
                             contentByte.MoveTo(50, document.Bottom + 27f);
                             contentByte.LineTo(553, document.Bottom + 27f);
                             contentByte.Stroke();
                             contentByte.BeginText();
                             contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, docNumber, 50, 42, 0);
                             contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 50, 27, 0);
-                            contentByte.AddTemplate(importedPage, 0, 0);
+                            
 
                             image.SetAbsolutePosition(pageSize.Width - 96, 5);
                             contentByte.AddImage(image, false);
                         }
                         else
                         {
+                            contentByte.AddTemplate(importedPage, 0, 1, -1, 0, pageSize.Width, 0);
                             contentByte.MoveTo(520, document.Bottom + 8f);
                             contentByte.LineTo(520, document.Bottom + 780f);
                             contentByte.Stroke();
                             contentByte.BeginText();
                             contentByte.ShowTextAligned(PdfContentByte.ALIGN_CENTER, docNumber, 540, 80, 90);
                             contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 555, 45, 90);
-                            contentByte.AddTemplate(importedPage, 0, 1, -1, 0, pageSize.Width, 0);
+                            
 
-                            image.SetAbsolutePosition(pageSize.Width - 64, 770);
+                            image.SetAbsolutePosition(pageSize.Width - 77, 740);//64---770    
                             contentByte.AddImage(image, false);
                         }
 
