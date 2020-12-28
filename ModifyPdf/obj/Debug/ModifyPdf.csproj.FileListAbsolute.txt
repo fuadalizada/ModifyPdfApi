@@ -136,3 +136,4 @@ D:\VisualStudio2019\ModifyPdfApi\ModifyPdf\obj\Debug\ModifyPdf.csproj.CoreCompil
 D:\VisualStudio2019\ModifyPdfApi\ModifyPdf\obj\Debug\ModifyPdf.csproj.CopyComplete
 D:\VisualStudio2019\ModifyPdfApi\ModifyPdf\obj\Debug\ModifyPdf.dll
 D:\VisualStudio2019\ModifyPdfApi\ModifyPdf\obj\Debug\ModifyPdf.pdb
+D:\VisualStudio2019\ModifyPdfApi\ModifyPdf\bin\QRCoder.dll

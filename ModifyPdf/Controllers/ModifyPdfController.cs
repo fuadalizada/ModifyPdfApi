@@ -1,19 +1,29 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Web;
 using iTextSharp.text.pdf;
 using System.Web.Http;
 using iTextSharp.text;
+using Image = iTextSharp.text.Image;
+using Rectangle = iTextSharp.text.Rectangle;
 
 namespace ModifyPdf.Controllers
 {
     public class ModifyPdfController : ApiController
     {
+        public static readonly List<string> ImageExtensions = new List<string> { ".jpg", ".jpeg", ".bmp", ".gif", ".png" };
         #region QrCode
         [HttpGet]
         [Route("api/ModifyPdf/Modify")]
-        public IHttpActionResult Modify(string fileLocation, string outLocation, string newFileLocation, string text, string datetime, string qrCodeLocation)
+        public IHttpActionResult Modify(string fileLocation, string outLocation, string newFileLocation,string imageLocation, string text, string datetime, string qrCodeLocation)
         {
+            if (ImageExtensions.Contains(Path.GetExtension(fileLocation)))
+            {
+                fileLocation = ConvertImageToPdf(fileLocation,imageLocation);
+            }
+
             using (var reader = new PdfReader(fileLocation))
             {
                 using (var fileStream = new FileStream(outLocation, FileMode.Create, FileAccess.Write))
@@ -22,7 +32,7 @@ namespace ModifyPdf.Controllers
                     var document = new Document(pageSize);
                     var writer = PdfWriter.GetInstance(document, fileStream);
                     document.Open();
-
+                    
                     for (var i = 1; i <= reader.NumberOfPages; i++)
                     {
                         pageSize = GetPageSize(reader, i);
@@ -42,6 +52,7 @@ namespace ModifyPdf.Controllers
 
                         string docNumber = $"{text}";
                         string date = $"{datetime}";
+
                         Image image = Image.GetInstance(qrCodeLocation);
                         image.ScaleAbsoluteWidth(54.5f);
                         image.ScaleAbsoluteHeight(48.5f);
@@ -87,12 +98,40 @@ namespace ModifyPdf.Controllers
             {
                 string oldFileName = Path.GetFileName(fileLocation);
                 string newFilePath = newFileLocation + oldFileName;
+
                 File.Move(fileLocation, newFilePath);
                 File.Move(outLocation, fileLocation);
 
                 return Ok(true);
             }
             return Ok(false);
+        }
+
+        public  string ConvertImageToPdf(string srcFilename, string dstFilename)
+        {
+            var document = new Document(PageSize.A4, 25, 25, 25, 25);
+            using (var stream = new FileStream(dstFilename, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                PdfWriter.GetInstance(document, stream);
+                document.Open();
+                using (var imageStream = new FileStream(srcFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    var image = Image.GetInstance(imageStream);
+                    if (image.Height > PageSize.A4.Height - 25)
+                    {
+                        image.ScaleToFit(PageSize.A4.Width - 25, PageSize.A4.Height - 25);
+                    }
+                    else if (image.Width > PageSize.A4.Width - 25)
+                    {
+                        image.ScaleToFit(PageSize.A4.Width - 25, PageSize.A4.Height - 25);
+                    }
+                    image.Alignment = Element.ALIGN_MIDDLE;
+                    document.Add(image);
+                }
+
+                document.Close();
+                return dstFilename;
+            }
         }
 
         #region OldCode
@@ -195,6 +234,23 @@ namespace ModifyPdf.Controllers
 
         #endregion
 
+        #region GenerateQrCode
+
+        //public string GenerateQrCode(string actionName, string docNumber)
+        //{
+        //    string text = $"https://edoc.ady.az/History/{actionName}?documentId={docNumber}";
+        //    PayloadGenerator.Url generator = new PayloadGenerator.Url(text);
+        //    string payload = generator.ToString();
+
+        //    QRCodeGenerator qrGenerator = new QRCodeGenerator();
+        //    QRCodeData qrCodeData = qrGenerator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.Q);
+        //    QRCode qrCode = new QRCode(qrCodeData);
+        //    Bitmap qrCodeAsBitmap = qrCode.GetGraphic(20);
+        //    qrCodeAsBitmap.Save(HttpContext.Current.Server.MapPath($"/Template/{docNumber}.jpeg"), System.Drawing.Imaging.ImageFormat.Jpeg);
+        //    return HttpContext.Current.Server.MapPath($"/Template/{docNumber}.jpeg");
+        //}
+
+        #endregion
 
         public Rectangle GetPageSize(PdfReader reader, int pageNumber)
         {
