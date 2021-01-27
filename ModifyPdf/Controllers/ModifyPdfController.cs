@@ -11,6 +11,7 @@ namespace ModifyPdf.Controllers
 {
     public class ModifyPdfController : ApiController
     {
+        public bool IsFirstValuePortrait { get; set; }
         #region QrCode
         [HttpGet]
         [Route("api/ModifyPdf/Modify")]
@@ -51,17 +52,34 @@ namespace ModifyPdf.Controllers
 
                         if (IsPortrait(reader, i))
                         {
-                            contentByte.AddTemplate(importedPage, 0, 0);
-                            contentByte.MoveTo(50, document.Bottom + 27f);
-                            contentByte.LineTo(553, document.Bottom + 27f);
-                            contentByte.Stroke();
-                            contentByte.BeginText();
-                            contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, docNumber, 50, 42, 0);
-                            contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 50, 27, 0);
-                            
+                            if (IsFirstValuePortrait)
+                            {
+                                contentByte.AddTemplate(importedPage, 0, 0);
+                                contentByte.MoveTo(520, document.Bottom + 8f);
+                                contentByte.LineTo(520, document.Bottom + 780f);
+                                contentByte.Stroke();
+                                contentByte.BeginText();
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_CENTER, docNumber, 540, 80, 90);
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 555, 45, 90);
 
-                            image.SetAbsolutePosition(pageSize.Width - 96, 5);
-                            contentByte.AddImage(image, false);
+
+                                image.SetAbsolutePosition(pageSize.Width - 77, 740);//64---770    
+                                contentByte.AddImage(image, false);
+                            }
+                            else
+                            {
+                                contentByte.AddTemplate(importedPage, 0, 0);
+                                contentByte.MoveTo(50, document.Bottom + 27f);
+                                contentByte.LineTo(553, document.Bottom + 27f);
+                                contentByte.Stroke();
+                                contentByte.BeginText();
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, docNumber, 50, 42, 0);
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 50, 27, 0);
+
+
+                                image.SetAbsolutePosition(pageSize.Width - 96, 5);
+                                contentByte.AddImage(image, false);
+                            }
                         }
                         else
                         {
@@ -102,7 +120,10 @@ namespace ModifyPdf.Controllers
         public Rectangle GetPageSize(PdfReader reader, int pageNumber)
         {
             Rectangle pageSize = reader.GetPageSizeWithRotation(pageNumber);
-
+            if (pageSize.Width>pageSize.Height)
+            {
+                IsFirstValuePortrait = true;
+            }
             return new Rectangle(
                 Math.Min(pageSize.Width, pageSize.Height),
                 Math.Max(pageSize.Width, pageSize.Height));
