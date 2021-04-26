@@ -11,7 +11,9 @@ namespace ModifyPdf.Controllers
 {
     public class ModifyPdfController : ApiController
     {
-        public bool IsFirstValuePortrait { get; set; }
+        public int PageRotation { get; set; }
+        public Rectangle PageOriginalSize { get; set; }
+
         #region QrCode
         [HttpGet]
         [Route("api/ModifyPdf/Modify")]
@@ -25,7 +27,7 @@ namespace ModifyPdf.Controllers
                     var document = new Document(pageSize);
                     var writer = PdfWriter.GetInstance(document, fileStream);
                     document.Open();
-                    
+
                     for (var i = 1; i <= reader.NumberOfPages; i++)
                     {
                         pageSize = GetPageSize(reader, i);
@@ -50,9 +52,44 @@ namespace ModifyPdf.Controllers
                         image.ScaleAbsoluteWidth(54.5f);
                         image.ScaleAbsoluteHeight(48.5f);
 
-                        if (IsPortrait(reader, i))
+                        float pageoriginwidth = PageOriginalSize.Width;
+                        float pageoriginhe = PageOriginalSize.Height;
+                        float pagesizerotationw = pageSize.Width;
+                        float pagesizerotationh = pageSize.Height;
+
+
+                        if (PageRotation == 0)
                         {
-                            if (IsFirstValuePortrait)
+                            if (pageSize.Width < pageSize.Height)
+                            {
+                                contentByte.AddTemplate(importedPage, 1f, 0, 0, 1f, 0, 0);
+                                contentByte.MoveTo(50, document.Bottom + 27f);
+                                contentByte.LineTo(553, document.Bottom + 27f);
+                                contentByte.Stroke();
+                                contentByte.BeginText();
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, docNumber, 50, 42, 0);
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 50, 27, 0);
+
+                                image.SetAbsolutePosition(pageSize.Width - 96, 5);
+                                contentByte.AddImage(image, false);
+                            }
+                        }
+                        else if (PageRotation == 90)
+                        {
+                            if (!(pageSize.Width.Equals(PageOriginalSize.Width) && pageSize.Height.Equals(PageOriginalSize.Height)))
+                            {
+                                contentByte.AddTemplate(importedPage, 0, -1f, 1f, 0, 0, pageSize.Height);
+                                contentByte.MoveTo(50, document.Bottom + 27f);
+                                contentByte.LineTo(553, document.Bottom + 27f);
+                                contentByte.Stroke();
+                                contentByte.BeginText();
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, docNumber, 50, 42, 0);
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 50, 27, 0);
+
+                                image.SetAbsolutePosition(pageSize.Width - 96, 5);
+                                contentByte.AddImage(image, false);
+                            }
+                            else
                             {
                                 contentByte.AddTemplate(importedPage, 0, 0);
                                 contentByte.MoveTo(520, document.Bottom + 8f);
@@ -66,9 +103,12 @@ namespace ModifyPdf.Controllers
                                 image.SetAbsolutePosition(pageSize.Width - 77, 740);//64---770    
                                 contentByte.AddImage(image, false);
                             }
-                            else
+                        }
+                        else if (PageRotation == 180)
+                        {
+                            if (pageSize.Width > pageSize.Height)
                             {
-                                contentByte.AddTemplate(importedPage, 0, 0);
+                                contentByte.AddTemplate(importedPage, -1f, 0, 0, -1f, pageSize.Width, pageSize.Height);
                                 contentByte.MoveTo(50, document.Bottom + 27f);
                                 contentByte.LineTo(553, document.Bottom + 27f);
                                 contentByte.Stroke();
@@ -76,25 +116,129 @@ namespace ModifyPdf.Controllers
                                 contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, docNumber, 50, 42, 0);
                                 contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 50, 27, 0);
 
+                                image.SetAbsolutePosition(pageSize.Width - 96, 5);
+                                contentByte.AddImage(image, false);
+                            }
+                            else
+                            {
+                                contentByte.AddTemplate(importedPage, 0, 0);
+                                contentByte.MoveTo(520, document.Bottom + 8f);
+                                contentByte.LineTo(520, document.Bottom + 780f);
+                                contentByte.Stroke();
+                                contentByte.BeginText();
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_CENTER, docNumber, 540, 80, 90);
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 555, 45, 90);
+
+                                image.SetAbsolutePosition(pageSize.Width - 77, 740);//64---770    
+                                contentByte.AddImage(image, false);
+                            }
+                        }
+                        else if (PageRotation == 270)
+                        {
+                            if (pageSize.Width > pageSize.Height)
+                            {
+                                contentByte.AddTemplate(importedPage, 0, 1f, -1f, 0, pageSize.Width, 0);
+                                contentByte.MoveTo(50, document.Bottom + 27f);
+                                contentByte.LineTo(553, document.Bottom + 27f);
+                                contentByte.Stroke();
+                                contentByte.BeginText();
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, docNumber, 50, 42, 0);
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 50, 27, 0);
 
                                 image.SetAbsolutePosition(pageSize.Width - 96, 5);
+                                contentByte.AddImage(image, false);
+                            }
+                            else
+                            {
+                                contentByte.AddTemplate(importedPage, 0, 0);
+                                contentByte.MoveTo(520, document.Bottom + 8f);
+                                contentByte.LineTo(520, document.Bottom + 780f);
+                                contentByte.Stroke();
+                                contentByte.BeginText();
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_CENTER, docNumber, 540, 80, 90);
+                                contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 555, 45, 90);
+
+                                image.SetAbsolutePosition(pageSize.Width - 77, 740);//64---770    
                                 contentByte.AddImage(image, false);
                             }
                         }
                         else
                         {
-                            contentByte.AddTemplate(importedPage, 0, 1, -1, 0, pageSize.Width, 0);
-                            contentByte.MoveTo(520, document.Bottom + 8f);
-                            contentByte.LineTo(520, document.Bottom + 780f);
-                            contentByte.Stroke();
-                            contentByte.BeginText();
-                            contentByte.ShowTextAligned(PdfContentByte.ALIGN_CENTER, docNumber, 540, 80, 90);
-                            contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 555, 45, 90);
-                            
-
-                            image.SetAbsolutePosition(pageSize.Width - 77, 740);//64---770    
-                            contentByte.AddImage(image, false);
+                            throw new InvalidOperationException($"Unexpected page rotation: [{PageRotation}].");
                         }
+
+
+
+                        //switch (PageRotation)
+                        //{
+                        //    case 0:
+                        //        contentByte.AddTemplate(importedPage, 1f, 0, 0, 1f, 0, 0);
+
+                        //        break;
+
+                        //    case 90:
+                        //        contentByte.AddTemplate(importedPage, 0, -1f, 1f, 0, 0, pageSize.Height);
+
+                        //        break;
+
+                        //    case 180:
+                        //        contentByte.AddTemplate(importedPage, -1f, 0, 0, -1f, pageSize.Width, pageSize.Height);
+                        //        break;
+
+                        //    case 270:
+                        //        contentByte.AddTemplate(importedPage, 0, 1f, -1f, 0, pageSize.Width, 0);
+                        //        break;
+
+                        //    default:
+                        //        throw new InvalidOperationException($"Unexpected page rotation: [{PageRotation}].");
+                        //}
+
+                        //if (IsPortrait(reader, i))
+                        //{
+                        //    if (IsFirstValuePortrait)
+                        //    {
+                        //        contentByte.AddTemplate(importedPage, 0, 0);
+                        //        contentByte.MoveTo(520, document.Bottom + 8f);
+                        //        contentByte.LineTo(520, document.Bottom + 780f);
+                        //        contentByte.Stroke();
+                        //        contentByte.BeginText();
+                        //        contentByte.ShowTextAligned(PdfContentByte.ALIGN_CENTER, docNumber, 540, 80, 90);
+                        //        contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 555, 45, 90);
+
+
+                        //        image.SetAbsolutePosition(pageSize.Width - 77, 740);//64---770    
+                        //        contentByte.AddImage(image, false);
+                        //    }
+                        //    else
+                        //    {
+                        //        contentByte.AddTemplate(importedPage, 0, 0);
+                        //        contentByte.MoveTo(50, document.Bottom + 27f);
+                        //        contentByte.LineTo(553, document.Bottom + 27f);
+                        //        contentByte.Stroke();
+                        //        contentByte.BeginText();
+                        //        contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, docNumber, 50, 42, 0);
+                        //        contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 50, 27, 0);
+
+
+                        //        image.SetAbsolutePosition(pageSize.Width - 96, 5);
+                        //        contentByte.AddImage(image, false);
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    contentByte.AddTemplate(importedPage, 0, 1, -1, 0, pageSize.Width, 0);
+                        //    contentByte.MoveTo(520, document.Bottom + 8f);
+                        //    contentByte.LineTo(520, document.Bottom + 780f);
+                        //    contentByte.Stroke();
+                        //    contentByte.BeginText();
+                        //    contentByte.ShowTextAligned(PdfContentByte.ALIGN_CENTER, docNumber, 540, 80, 90);
+                        //    contentByte.ShowTextAligned(PdfContentByte.ALIGN_LEFT, date, 555, 45, 90);
+
+
+                        //    image.SetAbsolutePosition(pageSize.Width - 77, 740);//64---770    
+                        //    contentByte.AddImage(image, false);
+                        //}
+
 
                         contentByte.EndText();
                     }
@@ -119,11 +263,13 @@ namespace ModifyPdf.Controllers
 
         public Rectangle GetPageSize(PdfReader reader, int pageNumber)
         {
+            PageOriginalSize = reader.GetPageSize(pageNumber);
             Rectangle pageSize = reader.GetPageSizeWithRotation(pageNumber);
-            if (pageSize.Width>pageSize.Height)
-            {
-                IsFirstValuePortrait = true;
-            }
+            PageRotation = reader.GetPageRotation(pageNumber);
+            //if (pageSize.Width > pageSize.Height)
+            //{
+            //    IsFirstValuePortrait = true;
+            //}
             return new Rectangle(
                 Math.Min(pageSize.Width, pageSize.Height),
                 Math.Max(pageSize.Width, pageSize.Height));
